@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz App - Neon Glow</title>
+<link href="https://fonts.googleapis.com/css?family=Orbitron:700&display=swap" rel="stylesheet">
+<style>
+/* Neon Glow Theme */
+body {
+    background: radial-gradient(circle at 80% 20%, #291c6e 0%, #00167d 65%, #060620 100%);
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Orbitron', 'Poppins', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+.quiz-container {
+    max-width: 500px;
+    width: 100%;
+    background: rgba(20,24,52,0.9);
+    border-radius: 24px;
+    box-shadow: 0 0 35px 8px #2c08ff55, 0 8px 50px #4300b540;
+    overflow: hidden;
+    animation: neonPop 1s cubic-bezier(.44,.56,.57,1.4);
+}
+.title {
+    background: linear-gradient(90deg, #9900ff 35%, #2debb0 100%);
+    color: #fff;
+    text-shadow: 0 0 18px #53ffed, 0 0 8px #ab29ff;
+    padding: 20px;
+    font-size: 2em;
+    text-align: center;
+    font-weight: bold;
+    animation: glowFade 2s infinite alternate;
+}
+.card-question {
+    background: linear-gradient(120deg,#181637 85%,#352879 100%);
+    border-left: 7px solid #2debb0;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 14px;
+}
+.card-question .q-num {
+    color: #2debb0;
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+.card-question .q-txt {
+    color: #fff;
+    font-size: 1.4em;
+    margin-bottom: 18px;
+}
+.options {
+    display: grid;
+    gap: 14px;
+}
+.option-btn {
+    padding: 20px 16px;
+    font-size: 1.4em;
+    font-weight: bold;
+    background: linear-gradient(90deg,#11095c,#2d3cff);
+    color: #fff;
+    border: 2px solid #db14e6;
+    border-radius: 60px;
+    cursor: pointer;
+    transition: all .25s;
+}
+.option-btn:hover:not(:disabled) {
+    transform: scale(1.05);
+    background: linear-gradient(90deg,#2debb0,#9900ff);
+    color: #fff200;
+}
+.option-btn.correct {
+    background: linear-gradient(90deg,#fff700,#ffcc00);
+    color: #222;
+}
+.option-btn.wrong {
+    background: linear-gradient(90deg,#ff3b30,#c50000);
+    color: #fff;
+}
+.option-btn:disabled { opacity: 0.7; }
+.progress-bar {
+    width: 85%;
+    height: 10px;
+    background: #16125e;
+    border-radius: 10px;
+    margin: 20px auto 0;
+}
+.progress {
+    background: linear-gradient(90deg, #3cfee6, #f187fb);
+    height: 100%;
+    transition: width 0.5s;
+}
+.question-counter {
+    text-align: center;
+    color: #2debb0;
+    font-weight: bold;
+    margin: 10px;
+}
+#result {
+    display: none;
+    text-align: center;
+    color: #fff;
+    padding: 20px;
+}
+.fade-slide-out { animation: fadeSlideOut 0.6s forwards; }
+@keyframes fadeSlideOut { to { opacity: 0; transform: translateY(-20px);}}
+.fade-slide-in { animation: fadeSlideIn 0.6s forwards; }
+@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);}}
+</style>
+</head>
+<body>
+<div class="quiz-container">
+    <h1 class="title">HINDI ALPHABET QUIZ (SYAM PRASAD)</h1>
+    <!-- Timer Removed -->
+    <div id="quiz"></div>
+    <div class="progress-bar"><div class="progress" id="progress"></div></div>
+    <div class="question-counter" id="question-counter"></div>
+    <div id="result"></div>
+</div>
+
+<script>
+/* ===== CONFIGURATION ===== */
+const CHOICE_COUNT = 5;           // Number of options per question
+const QUESTIONS_PER_GAME = 100;    // Number of questions per game
+/* ========================= */
+
+/* ===== QUESTIONS ARRAY ===== */
+const questions = [
+
+  { question: "न", options: ["భ", "ద", "త", "ప", "న", "థ", "స", "ధ"], correct: 4, answer: "న" },
+
+
+
+    { question: "ब", options: ["ల", "బ", "ప", "భ", "ఝ", "థ", "ధ", "మ"], correct: 1, answer: "బ" },
+
+
+
+    { question: "ख", options: ["ఘ", "డ", "ఖ", "ధ", "ఝ", "బ", "శ", "గ"], correct: 2, answer: "ఖ" },
+
+
+
+    { question: "झ", options: ["జ", "ఫ", "న", "ఝ", "స", "శ", "భ", "క"], correct: 3, answer: "ఝ" },
+
+
+
+    { question: "ణ", options: ["ऋ", "ण", "व", "त", "श्र", "न", "क्ष", "है"], correct: 1, answer: "ण" },
+
+
+
+    { question: "क्ष", options: ["హ", "క్ష", "భ", "ష", "ల", "ప", "ఫ", "మ"], correct: 1, answer: "క్ష" },  
+
+
+
+    { question: "హ", options: ["त", "श", "ब", "न", "य", "ज्ञ", "ह", "र"], correct: 6, answer: "ह" },
+
+
+
+    { question: "म", options: ["ల", "ధ", "భ", "ఠ", "థ", "బ", "శ", "మ"], correct: 7, answer: "మ" },
+
+
+
+    { question: "त", options: ["భ", "థ", "బ", "ద", "ఝ", "ధ", "జ", "త"], correct: 7, answer: "త" },
+
+
+
+    { question: "థ", options: ["ध", "ल", "ट", "त", "भ", "द", "न", "थ"], correct: 7, answer: "थ" },
+
+
+
+    { question: "ౠ", options: ["इ", "ओ", "औ", "ऊ", "अं", "अः", "उ", "ऋ"], correct: 7, answer: "ऋ" },
+
+
+
+    { question: "श", options: ["శ", "హ", "ష", "స", "భ", "ప", "ల", "మ"], correct: 0, answer: "శ" },
+
+
+
+    { question: "ठ", options: ["ణ", "ఢ", "ఠ", "డ", "శ", "జ", "ట", "న"], correct: 2, answer: "ఠ" },
+
+
+
+    { question: "ట", options: ["भ", "श", "ढ", "श्र", "क्ष", "ट", "थ", "द"], correct: 5, answer: "ट" },
+
+
+
+    { question: "ల", options: ["श", "त", "र", "ज्ञ", "न", "क्ष", "ल", "ज्ञ"], correct: 6, answer: "ल" },
+
+
+
+    { question: "ल", options: ["భ", "శ", "ళ", "ఢ", "మ", "హ", "స", "స"], correct: 2, answer: "ళ" },
+
+
+
+    { question: "ड", options: ["ణ", "న", "ఝ", "థ", "ద", "ఢ", "డ", "ధ"], correct: 6, answer: "డ" },
+
+
+
+    { question: "న", options: ["श", "थ", "ट", "व", "ध", "न", "ऋ", "भ"], correct: 5, answer: "न" },
+
+
+
+    { question: "త", options: ["ल", "थ", "क्ष", "द", "त", "ह", "श्न", "ध"], correct: 4, answer: "त" },
+
+
+
+    { question: "ఛ", options: ["थ", "क्ष", "ज", "झ", "भ", "च", "छ", "श्र"], correct: 6, answer: "छ" },
+
+
+
+    { question: "చ", options: ["श्र", "छ", "झ", "च", "भ", "न", "ज", "व"], correct: 3, answer: "च" },
+
+
+
+    { question: "గ", options: ["र", "ग", "झ", "ज्ञ", "घ", "ऋ", "फ", "ट"], correct: 1, answer: "ग" },
+
+
+
+    { question: "జ్ఞ", options: ["प", "ब", "ज्ञ", "क्ष", "श्र", "श", "र", "न"], correct: 2, answer: "ज्ञ" },
+
+
+
+    { question: "ह", options: ["ప", "మ", "భ", "ల", "డ", "ష", "ఫ", "హ"], correct: 7, answer: "హ" },
+
+
+
+    { question: "ప", options: ["ब", "भ", "प", "फ", "ध", "ल", "श्र", "थ"], correct: 2, answer: "प" },
+
+
+
+    { question: "ण", options: ["ధ", "ష", "ఝ", "ణ", "భ", "జ", "ద", "న"], correct: 3, answer: "ణ" },
+
+
+
+    { question: "ल", options: ["ల", "ఫ", "హ", "స", "భ", "శ", "ఖ", "మ"], correct: 0, answer: "ల" },
+
+
+
+    { question: "ఐ", options: ["अं", "ए", "ऊ", "ओ", "इ", "औ", "उ", "ऐ"], correct: 7, answer: "ऐ" },
+
+
+
+    { question: "త్ర", options: ["ఫ", "క్ష", "త్ర", "థ", "హ", "ద", "ప", "ష"], correct: 2, answer: "త్ర" },
+
+
+
+    { question: "स", options: ["మ", "భ", "స", "ప", "ష", "ఝ", "ల", "హ"], correct: 2, answer: "స" },
+
+
+
+    { question: "क", options: ["గ", "క", "బ", "ష", "ణ", "ఖ", "ఘ", "ల"], correct: 1, answer: "క" },
+
+
+
+    { question: "క", options: ["ब", "घ", "त", "व", "ग", "द", "ख", "क"], correct: 7, answer: "क" },
+
+
+
+    { question: "భ", options: ["ल", "भ", "म", "ध", "ब", "थ", "न", "ष"], correct: 1, answer: "भ" },
+
+
+
+    { question: "ఝ", options: ["श्र", "क्ष", "ज", "भ", "श", "झ", "थ", "ण"], correct: 5, answer: "झ" },
+
+
+
+    { question: "म", options: ["ణ", "మ", "ఫ", "ఢ", "ప", "ష", "స", "బ"], correct: 1, answer: "మ" },
+
+
+
+    { question: "ष", options: ["భ", "ల", "మ", "ష", "ప", "స", "హ", "ళ"], correct: 3, answer: "ష" },
+
+
+
+    { question: "द", options: ["श्र", "य", "ट", "न", "भ", "थ", "ध", "द"], correct: 7, answer: "द" },
+
+
+
+    { question: "డ", options: ["श्र", "ढ", "ह", "ड", "झ", "द", "व", "क्ष"], correct: 3, answer: "ड" },
+
+
+
+    { question: "छ", options: ["ధ", "చ", "ఛ", "హ", "స", "ఝ", "జ", "భ"], correct: 2, answer: "ఛ" },
+
+
+
+    { question: "ग", options: ["య", "స", "న", "ధ", "శ్ర", "గ", "ఘ", "ఢ"], correct: 5, answer: "గ" },
+
+
+
+    { question: "ర", options: ["त", "श्र", "ज्ञ", "ल", "श", "र", "स", "म"], correct: 5, answer: "र" },
+
+
+
+    { question: "ఘ", options: ["द", "द", "ध", "न", "त", "श", "घ", "य"], correct: 6, answer: "घ" },
+
+
+
+    { question: "స", options: ["ज्ञ", "य", "स", "ब", "त", "श", "र", "न"], correct: 2, answer: "स" },
+
+
+
+    { question: "ధ", options: ["ल", "थ", "ध", "ब", "व", "द", "ज्ञ", "ऋ"], correct: 2, answer: "ध" },
+
+
+
+    { question: "జ", options: ["थ", "श्र", "ण", "ज", "क्ष", "य", "झ", "भ"], correct: 3, answer: "ज" },
+
+
+
+    { question: "औ", options: ["ఒ", "ఓ", "ఎ", "ఊ", "అ", "అం", "ఔ", "ఐ"], correct: 6, answer: "ఔ" },
+
+
+
+    { question: "వ", options: ["त", "र", "ज्ञ", "न", "व", "ज्ञ", "ब", "श"], correct: 4, answer: "व" },
+
+
+
+    { question: "ढ", options: ["ఝ", "న", "ష", "భ", "డ", "ద", "ఢ", "ధ"], correct: 6, answer: "ఢ" },
+
+
+
+    { question: "ट", options: ["ఢ", "డ", "న", "ణ", "జ", "క", "ట", "ఠ"], correct: 6, answer: "ట" },
+
+
+
+    { question: "ఢ", options: ["झ", "र", "ढ", "द", "ड", "थ", "क्ष", "ध"], correct: 2, answer: "ढ" },
+
+
+
+    { question: "थ", options: ["ద", "భ", "ఠ", "ష", "థ", "ఝ", "ప", "ధ"], correct: 4, answer: "థ" },
+
+
+
+    { question: "య", options: ["य", "ल", "श", "र", "ज्ञ", "श्र", "त", "झ"], correct: 0, answer: "य" },
+
+
+
+    { question: "ए", options: ["ఏ", "ఓ", "అః", "ఉ", "ఆ", "ఔ", "అం", "ౠ"], correct: 0, answer: "ఏ" },
+
+
+
+    { question: "च", options: ["చ", "ఝ", "ధ", "జ", "హ", "స", "భ", "ఛ"], correct: 0, answer: "చ" },
+
+
+
+    { question: "ఓ", options: ["उ", "आ", "औ", "ए", "अं", "ओ", "इ", "ऊ"], correct: 5, answer: "ओ" },
+
+
+
+    { question: "త్ర", options: ["स", "ढ", "श", "श्र", "छ", "त्र", "ज्ञ", "ष"], correct: 5, answer: "त्र" },
+
+
+
+    { question: "ఠ", options: ["व", "क्ष", "श्र", "ल", "ढ", "श", "ठ", "ड"], correct: 6, answer: "ठ" },
+
+
+
+    { question: "घ", options: ["బ", "ఘ", "ప", "గ", "ఝ", "స", "క", "ధ"], correct: 1, answer: "ఘ" },
+
+
+
+    { question: "ऋ", options: ["ఋ", "ఏ", "ఆ", "ఉ", "అం", "ఎ", "అః", "ఎ"], correct: 0, answer: "ఋ" },
+
+
+
+    { question: "ऋ", options: ["అః", "ఏ", "ఉ", "ఎ", "ఐ", "ౠ", "ఆ", "అం"], correct: 5, answer: "ౠ" },
+
+
+
+    { question: "ओ", options: ["ఔ", "అం", "అః", "ఊ", "ఠ", "ఎ", "అ", "ఒ"], correct: 7, answer: "ఒ" },
+
+
+
+    { question: "ओ", options: ["అః", "ఐ", "ఊ", "అం", "ఓ", "ఎ", "అ", "ఔ"], correct: 4, answer: "ఓ" },
+
+
+
+    { question: "ज्ञ", options: ["ఫ", "భ", "ల", "ప", "హ", "జ్ఞ", "మ", "ష"], correct: 5, answer: "జ్ఞ" },
+
+
+
+    { question: "ఔ", options: ["ऊ", "ए", "अं", "इ", "औ", "उ", "ऐ", "आ"], correct: 4, answer: "औ" },
+
+
+
+    { question: "శ్ర", options: ["र", "ब", "ल", "ज्ञ", "न", "ऋ", "श्र", "श"], correct: 6, answer: "श्र" },
+
+
+
+    { question: "శ", options: ["ज्ञ", "भ", "ब", "र", "ज्ञ", "त", "न", "श"], correct: 7, answer: "श" },
+
+
+
+    { question: "र", options: ["ట", "శ", "స", "ర", "ల", "ళ", "మ", "హ"], correct: 3, answer: "ర" },
+
+
+
+    { question: "ఎ", options: ["ए", "ऊ", "औ", "ऐ", "ओ", "उ", "इ", "अं"], correct: 0, answer: "ए" },
+
+
+
+    { question: "ऐ", options: ["ఎ", "అం", "ఐ", "ఉ", "ౠ", "అః", "ఏ", "ఆ"], correct: 2, answer: "ఐ" },
+
+
+
+    { question: "ब", options: ["ఢ", "ణ", "ష", "భ", "ళ", "బ", "గ", "ఛ"], correct: 5, answer: "బ" },
+
+
+
+    { question: "ష", options: ["ष", "ब", "त", "श", "र", "ज्ञ", "न", "ज्ञ"], correct: 0, answer: "ष" },
+
+
+
+    { question: "ఖ", options: ["ध", "द", "क्ष", "श्र", "त", "ऋ", "य", "ख"], correct: 7, answer: "ख" },
+
+
+
+    { question: " व", options: ["ల", "స", "వ", "ర", "భ", "ప", "హ", "మ"], correct: 2, answer: "వ" },
+
+
+
+    { question: "ए", options: ["ఉ", "ఔ", "ఆ", "అః", "ఎ", "ఓ", "ౠ", "అం"], correct: 4, answer: "ఎ" },
+
+
+
+    { question: "श्र", options: ["ఫ", "శ్ర", "ష", "మ", "భ", "ల", "హ", "ప"], correct: 1, answer: "శ్ర" },
+
+
+
+    { question: "ఫ", options: ["ल", "फ", "भ", "श्र", "ध", "प", "थ", "ब"], correct: 1, answer: "फ" },
+
+
+
+    { question: " य", options: ["మ", "ళ", "స", "య", "శ", "ల", "ట", "హ"], correct: 3, answer: "య" },
+
+
+
+    { question: "క్ష", options: ["श्र", "र", "श", "ज्ञ", "ऋ", "क्ष", "न", "ब"], correct: 5, answer: "क्ष" },
+
+
+
+    { question: "द", options: ["ప", "ఝ", "ధ", "భ", "ద", "న", "ఠ", "థ"], correct: 4, answer: "ద" },
+
+
+
+    { question: "फ", options: ["బ", "భ", "ర", "ప", "ణ", "ఫ", "ళ", "ష"], correct: 5, answer: "ఫ" },
+
+
+
+    { question: "भ", options: ["స", "బ", "గ", "ల", "భ", "ఢ", "ష", "ణ"], correct: 4, answer: "భ" },
+
+
+
+    { question: "ध", options: ["థ", "ద", "భ", "హ", "ధ", "ష", "ఫ", "ప"], correct: 4, answer: "ధ" },
+
+
+
+    { question: "ఏ", options: ["ओ", "ए", "औ", "अं", "उ", "ऐ", "इ", "ऊ"], correct: 1, answer: "ए" },
+
+
+
+    { question: "ज", options: ["క", "స", "జ", "శ", "న", "హ", "ఝ", "భ"], correct: 2, answer: "జ" },
+
+
+
+    { question: "ళ", options: ["त", "ज्ञ", "र", "न", "ज्ञ", "क्ष", "श", "ल"], correct: 7, answer: "ल" },
+
+
+
+    { question: "ఋ", options: ["ऊ", "अः", "औ", "ओ", "उ", "ऋ", "अं", "इ"], correct: 5, answer: "ऋ" },
+
+
+
+    { question: "प", options: ["ణ", "ర", "ష", "భ", "ప", "ళ", "బ", "ఫ"], correct: 4, answer: "ప" },
+
+
+
+    { question: "ఒ", options: ["आ", "उ", "ऊ", "ए", "ओ", "औ", "इ"], correct: 4, answer: "ओ" }
+];
+/* ========================== */
+
+let remainingQuestions = [], score = 0, answered = 0, currentQuestionIndex = 0;
+let selectedQuestions = [], totalQuestions;
+
+function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function getRandomQuestions(count) {
+    if (remainingQuestions.length < count) {
+        remainingQuestions = shuffleArray([...questions]);
+    }
+    const quizSet = remainingQuestions.slice(0, count);
+    remainingQuestions = remainingQuestions.slice(count);
+    return quizSet;
+}
+
+function getLimitedOptions(q) {
+    let wrongOptions = q.options.filter(o => o !== q.answer);
+    wrongOptions = shuffleArray(wrongOptions).slice(0, CHOICE_COUNT - 1);
+    return shuffleArray([q.answer, ...wrongOptions]);
+}
+
+function updateQuestionCounter() {
+    document.getElementById('question-counter').textContent =
+        `Question ${answered} of ${totalQuestions}`;
+}
+
+function updateProgress() {
+    document.getElementById('progress').style.width = `${(answered / totalQuestions) * 100}%`;
+}
+
+async function showQuestion(index) {
+    const quizDiv = document.getElementById('quiz');
+    if (index >= totalQuestions) {
+        if (quizDiv.firstChild) {
+            quizDiv.firstChild.classList.add('fade-slide-out');
+            await new Promise(r => setTimeout(r, 600));
+        }
+        showResult();
+        return;
+    }
+    if (quizDiv.firstChild) {
+        quizDiv.firstChild.classList.add('fade-slide-out');
+        await new Promise(r => setTimeout(r, 600));
+    }
+    quizDiv.innerHTML = '';
+    const q = selectedQuestions[index];
+    const questionDiv = document.createElement('div');
+    questionDiv.className = 'card-question fade-slide-in';
+    questionDiv.innerHTML = `<span class="q-num">Q${index + 1}.</span><span class="q-txt">${q.question}</span>`;
+    const optionsDiv = document.createElement('div');
+    optionsDiv.className = 'options';
+    getLimitedOptions(q).forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(btn, q.answer);
+        optionsDiv.appendChild(btn);
+    });
+    questionDiv.appendChild(optionsDiv);
+    quizDiv.appendChild(questionDiv);
+}
+
+function checkAnswer(button, correctAnswer) {
+    const buttons = button.parentElement.getElementsByTagName('button');
+    for (let btn of buttons) btn.disabled = true;
+    if (button.textContent === correctAnswer) {
+        button.classList.add('correct');
+        score++;
+    } else {
+        button.classList.add('wrong');
+        for (let btn of buttons) if (btn.textContent === correctAnswer) btn.classList.add('correct');
+    }
+    answered++;
+    updateQuestionCounter();
+    updateProgress();
+    setTimeout(() => { currentQuestionIndex++; showQuestion(currentQuestionIndex); }, 900);
+}
+
+function getFeedback(p) {
+    if (p >= 90) return "🌟 Excellent!";
+    else if (p >= 70) return "👍 Very good!";
+    else if (p >= 50) return "👌 Good!";
+    else return "💪 Keep trying!";
+}
+
+function showResult() {
+    const quizDiv = document.getElementById('quiz'); quizDiv.innerHTML = '';
+    const perc = (score / totalQuestions) * 100;
+    const feedback = getFeedback(perc);
+    const resultDiv = document.getElementById('result'); resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `<h2>Your Result</h2>
+    <p>${feedback}</p><p>Score: ${score}/${totalQuestions}</p>
+    <p>Percentage: ${perc.toFixed(1)}%</p>
+    <div style="margin-top:20px;">
+        <button onclick="retakeQuiz()" class="option-btn">🔄 Try Again</button>
+    </div>`;
+}
+
+function retakeQuiz() {
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('progress').style.width = '0';
+    createQuiz();
+}
+
+function createQuiz() {
+    selectedQuestions = getRandomQuestions(QUESTIONS_PER_GAME);
+    totalQuestions = selectedQuestions.length;
+    score = 0; answered = 0; currentQuestionIndex = 0;
+    showQuestion(currentQuestionIndex);
+    updateQuestionCounter();
+    updateProgress();
+}
+
+window.addEventListener("DOMContentLoaded", createQuiz);
+</script>
+</body>
+</html>
